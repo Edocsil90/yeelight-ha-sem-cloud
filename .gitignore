@@ -1,0 +1,12 @@
+# Bulb tokens created by yeelight_setup.py - never commit these
+yeelight_token_*.txt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# PyInstaller
+build/
+dist/
+*.spec
