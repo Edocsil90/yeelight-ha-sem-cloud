@@ -4,6 +4,44 @@
 
 Este guia configura uma lâmpada Yeelight Color só com a linha de comandos no Windows. Obtém-se o token, ativa-se o controlo LAN e liga-se a lâmpada ao Wi‑Fi **sem a app Yeelight ou Mi Home e sem conta Xiaomi**. No fim, a lâmpada é adicionada ao Home Assistant pela integração oficial **Yeelight**.
 
+## Configuração rápida (recomendada)
+
+A ferramenta `yeelight-setup` faz por si os passos 3 a 6 do guia manual. Só tem de introduzir o nome e a palavra-passe do Wi‑Fi. Existe em duas versões; escolha uma:
+
+### Opção A — Executável para Windows (sem instalar nada)
+
+1. Descarregue o `yeelight-setup.exe` da página [Releases](../../releases).
+2. Reponha as definições de fábrica da lâmpada (passo 1) e ligue o PC à rede dela (passo 2).
+3. Faça duplo clique no `yeelight-setup.exe` e siga as instruções.
+
+O Windows SmartScreen pode avisar que a aplicação não é reconhecida, porque não está assinada. Clique em **Mais informações → Executar mesmo assim**. Cada versão inclui também um ficheiro `.sha256`, para confirmar que o ficheiro descarregado é o mesmo que o GitHub Actions compilou a partir do código deste repositório:
+
+```
+powershell (Get-FileHash yeelight-setup.exe -Algorithm SHA256).Hash
+```
+
+### Opção B — Script Python
+
+Requer Python 3.9 ou mais recente.
+
+```
+pip install -r requirements.txt
+python yeelight_setup.py
+```
+
+### O que a ferramenta faz
+
+1. Encontra a lâmpada na rede de configuração e lê o token, que guarda em `yeelight_token_<id>.txt` na pasta atual.
+2. Ativa o controlo LAN.
+3. Pede o nome e a palavra-passe do Wi‑Fi (a palavra-passe não aparece no ecrã) e envia-os para a lâmpada. Sabe que é normal a lâmpada desligar a sua rede antes de responder.
+4. Pede-lhe para voltar à sua rede habitual, encontra a lâmpada e testa a porta TCP 55443.
+
+A ferramenta fala inglês ou português, conforme a língua do Windows. Pode escolher com `--lang pt` ou `--lang en`. Para ver todas as opções, execute `yeelight_setup.py --help`.
+
+A ferramenta não mexe no router nem na firewall: as regras do passo 7 têm de ser criadas manualmente.
+
+> A ferramenta comunica diretamente com a lâmpada na rede local, pelo protocolo miIO (UDP 54321) e pelo protocolo LAN da Yeelight (TCP 55443). Nada é enviado para a Internet. A única dependência é o `cryptography`.
+
 ## Testado com
 
 | Campo | Valor |
@@ -15,7 +53,7 @@ Este guia configura uma lâmpada Yeelight Color só com a linha de comandos no W
 
 Outros modelos `yeelink.light.*` antigos devem funcionar da mesma forma, mas não foram testados.
 
-## Requisitos
+## Configuração manual — requisitos
 
 - [Node.js](https://nodejs.org/) e a CLI `miio`:
   ```
@@ -27,7 +65,7 @@ Outros modelos `yeelink.light.*` antigos devem funcionar da mesma forma, mas nã
   ```
 - Uma rede Wi‑Fi de **2,4 GHz** com **WPA2**. Evite WPA3 e SSIDs com caracteres especiais.
 
-## Passos
+## Configuração manual — passos
 
 ### 1. Repor as definições de fábrica da lâmpada
 
@@ -153,6 +191,9 @@ No Home Assistant, vá a **Definições → Dispositivos e serviços**.
 - O controlo LAN da Yeelight **não tem autenticação**: qualquer dispositivo na mesma rede pode controlar a lâmpada. Ponha-a numa VLAN própria para IoT e permita só o tráfego do Home Assistant (passo 7).
 - Bloqueie o acesso da lâmpada à Internet (passo 7). Assim evita atualizações de firmware automáticas, que já removeram o controlo LAN em alguns modelos.
 - Antes de publicar logs, substitua o token, o Device ID, os IPs, o SSID e a palavra-passe por marcadores.
+- Durante a configuração, a rede Wi‑Fi da própria lâmpada é **aberta** e o token passa nela sem cifra, tal como acontece com as apps oficiais. Alguém ao alcance do Wi‑Fi durante esses minutos poderia ler o token e decifrar a palavra-passe do Wi‑Fi enviada para a lâmpada. Faça a configuração em casa e termine-a rapidamente.
+- Se responder mais de um dispositivo em modo de configuração, a ferramenta pergunta qual usar. Antes de enviar a palavra-passe do Wi‑Fi, mostra sempre o modelo e o IP e pede confirmação.
+- Os ficheiros `yeelight_token_*.txt` criados pela ferramenta estão no `.gitignore`, para não irem parar ao repositório por engano.
 
 ## Referências
 

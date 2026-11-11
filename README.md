@@ -4,6 +4,44 @@
 
 This guide sets up a Yeelight Color bulb from the Windows command line. You get the token, enable LAN control and connect the bulb to Wi‑Fi **without the Yeelight or Mi Home app and without a Xiaomi account**. The bulb is then added to Home Assistant with the official **Yeelight** integration.
 
+## Quick setup (recommended)
+
+The `yeelight-setup` tool runs steps 3 to 6 of the manual guide for you. You only enter your Wi‑Fi name and password. It is available in two forms, so pick one:
+
+### Option A — Windows executable (nothing to install)
+
+1. Download `yeelight-setup.exe` from the [Releases](../../releases) page.
+2. Factory-reset the bulb (step 1) and connect your PC to its network (step 2).
+3. Double-click `yeelight-setup.exe` and follow the instructions.
+
+Windows SmartScreen may warn that the app is unrecognised, because it is not signed. Click **More info → Run anyway**. Each release also includes a `.sha256` file, so you can check that the download matches the build made by GitHub Actions from this repository's code:
+
+```
+powershell (Get-FileHash yeelight-setup.exe -Algorithm SHA256).Hash
+```
+
+### Option B — Python script
+
+Requires Python 3.9 or later.
+
+```
+pip install -r requirements.txt
+python yeelight_setup.py
+```
+
+### What the tool does
+
+1. Finds the bulb on its setup network and reads the token, then saves it to `yeelight_token_<id>.txt` in the current folder.
+2. Enables LAN control.
+3. Asks for your Wi‑Fi name and password (the password is hidden as you type) and sends them to the bulb. It knows the "bulb closed its network" case is normal.
+4. Asks you to reconnect to your usual network, finds the bulb and tests TCP port 55443.
+
+It is in English or Portuguese, depending on the Windows language. You can force one with `--lang en` or `--lang pt`. Run `yeelight_setup.py --help` to see all options.
+
+The tool does not change your router or firewall: create the rules in step 7 yourself.
+
+> The tool talks to the bulb directly over the local network, using the miIO protocol (UDP 54321) and the Yeelight LAN protocol (TCP 55443). Nothing is sent to the Internet. Its only dependency is `cryptography`.
+
 ## Tested with
 
 | Field | Value |
@@ -15,7 +53,7 @@ This guide sets up a Yeelight Color bulb from the Windows command line. You get 
 
 Other older `yeelink.light.*` models should work the same way, but have not been tested.
 
-## Requirements
+## Manual setup — requirements
 
 - [Node.js](https://nodejs.org/) and the `miio` CLI:
   ```
@@ -27,7 +65,7 @@ Other older `yeelink.light.*` models should work the same way, but have not been
   ```
 - A **2.4 GHz** Wi‑Fi network using **WPA2**. Avoid WPA3 and SSIDs with special characters.
 
-## Steps
+## Manual setup — steps
 
 ### 1. Factory-reset the bulb
 
@@ -153,6 +191,9 @@ In Home Assistant, go to **Settings → Devices & services**.
 - Yeelight LAN control has **no authentication**: any device on the same network can control the bulb. Put it on its own IoT VLAN and allow only Home Assistant traffic (step 7).
 - Block the bulb's Internet access (step 7). This prevents automatic firmware updates, which have removed LAN control on some models.
 - Before publishing logs, replace the token, Device ID, IPs, SSID and password with placeholders.
+- During setup, the bulb's own Wi‑Fi network is **open** and the token travels on it in clear text, just like with the official apps. Someone within Wi‑Fi range during those few minutes could read the token and decrypt the Wi‑Fi password sent to the bulb. Do the setup at home and finish it quickly.
+- If more than one device answers in setup mode, the tool asks which one to use. Before sending the Wi‑Fi password, it always shows the model and IP and asks you to confirm.
+- The `yeelight_token_*.txt` files created by the tool are listed in `.gitignore`, so they are not committed by mistake.
 
 ## References
 
