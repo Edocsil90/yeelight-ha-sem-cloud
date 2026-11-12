@@ -42,7 +42,7 @@ jobs:
           "$hash  yeelight-setup.exe" | Out-File -Encoding ascii dist\yeelight-setup.exe.sha256
           Get-Content dist\yeelight-setup.exe.sha256
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: yeelight-setup-windows
           path: |
